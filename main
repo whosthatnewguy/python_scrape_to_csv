@@ -62,8 +62,8 @@ if __name__ == '__main__':
     url = 'https://www.nic.in/projects-all'
     try: 
         soup = request_exception_check(url)
-    except:
-        print("Fail")
+    except Exception as e:
+        print("Error: " + str(e))
     try: 
         get_source_data(soup)
     except:
