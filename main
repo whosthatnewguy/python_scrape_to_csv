@@ -1,0 +1,71 @@
+from bs4 import BeautifulSoup
+import requests
+from requests.exceptions import ConnectionError
+from requests.exceptions import HTTPError
+from requests.exceptions import MissingSchema
+import time
+import csv
+import sys
+
+
+def request_exception_check(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except HTTPError as e:
+        print("HTTP Error occurred: " + str(e))
+    except MissingSchema as e:
+        return "Website does not exist."
+    except Exception as e:
+        return "Error @: " + str(e)
+    else:
+        print('Connected established.')
+        soup = BeautifulSoup(response.text,'lxml')
+        return soup
+
+# create csv file
+filename = "python_prereq_training_" + str(time.strftime("%Y_%m_%d")) + '.csv'
+file = open(filename, "w")
+headers = "name, description, url\n"
+file.write(headers)
+
+def get_source_data(soup):
+    
+    
+    try:
+        containers = soup.find_all("div", {"class": "list-block"})
+        container = containers[0]
+
+        for container in containers:
+            # project name
+            name_container = container.find_all("h3")
+            project_name = name_container[0].text.strip()
+            project_name = project_name.replace(',','')
+
+            # description
+            desc_container = container.find_all("p")
+            project_description = desc_container[0].text.strip()
+            project_description = project_description.replace(',','')
+   
+            # url
+            project_url = [containers['href'] for containers in container.find_all("a", href=True)][0]
+
+            file.write(project_name+","+project_description+","+project_url+'\n')
+        file.close()
+    except Exception as e:
+        print("Object not found on page - Check your URL: " + str(e))
+    else:
+        print("Success!")
+
+if __name__ == '__main__':
+    #url = 'https://www.nic.in/praerhojsrdyjthsects-all/10000/500' #bad_url
+    url = 'https://www.nic.in/projects-all'
+    try: 
+        soup = request_exception_check(url)
+    except:
+        print("Fail")
+    try: 
+        get_source_data(soup)
+    except:
+        pass
+    
